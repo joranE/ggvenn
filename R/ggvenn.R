@@ -5,6 +5,7 @@
 #' @param columns A character vector use as index to select columns/elements.
 #' @param show_elements Show set elements instead of count/percentage.
 #' @param show_percentage Show percentage for each set.
+#' @param show_count Show counts for each set.
 #' @param digits The desired number of digits after the decimal point
 #' @param fill_color Filling colors in circles.
 #' @param fill_alpha Transparency for filling circles.
@@ -64,6 +65,7 @@
 ggvenn <- function(data, columns = NULL,
                    show_elements = FALSE,
                    show_percentage = TRUE,
+                   show_count = TRUE,
                    digits = 1,
                    fill_color = c("blue", "yellow", "green", "red"),
                    fill_alpha = .5,
@@ -81,8 +83,11 @@ ggvenn <- function(data, columns = NULL,
                    auto_scale = FALSE,
                    comma_sep=FALSE) {
   show_outside <- match.arg(show_outside)
-  venn <- prepare_venn_data(data, columns, show_elements, show_percentage, digits,
-                            label_sep, count_column, show_outside, auto_scale,
+  if (!show_percentage && !show_count){
+    stop("One of 'show_percentage' or 'show_count' must be TRUE.")
+  }
+  venn <- prepare_venn_data(data, columns, show_elements, show_percentage, show_count, 
+                            digits, label_sep, count_column, show_outside, auto_scale,
                             comma_sep=comma_sep)
   g <- venn$shapes %>%
     mutate(group = LETTERS[group]) %>%
@@ -380,8 +385,8 @@ gen_label_pos_4 <- function() {
 }
 
 prepare_venn_data <- function(data, columns = NULL,
-                              show_elements = FALSE, show_percentage = TRUE, digits = 1,
-                              label_sep = ",", count_column = NULL,
+                              show_elements = FALSE, show_percentage = TRUE, show_count = TRUE, 
+                              digits = 1, label_sep = ",", count_column = NULL,
                               show_outside = c("auto", "none", "always"),
                               auto_scale = FALSE, comma_sep=FALSE) {
   show_outside <- match.arg(show_outside)
@@ -534,19 +539,32 @@ prepare_venn_data <- function(data, columns = NULL,
     df_text <- df_text[-nrow(df_text), ]
   }
   if (!show_elements) {
-    fmt <- sprintf("%%d\n(%%.%df%%%%)", digits)
-    if (show_percentage) {
+    if (show_percentage && show_count) {
+      fmt <- sprintf("%%d\n(%%.%df%%%%)", digits)
         if(comma_sep) {
             fmt <- sprintf("%%s\n(%%.%df%%%%)", digits)
-            df_text <- df_text %>% mutate(text = sprintf(fmt,
-                                                         scales::label_comma()(n), 100 * n / sum(n)))
+            df_text <- 
+              df_text %>% 
+              mutate(
+                text = sprintf(fmt,scales::label_comma()(n), 100 * n / sum(n))
+              )
         }else
-            df_text <- df_text %>% mutate(text = sprintf(fmt, n, 100 * n / sum(n)))
+            df_text <- 
+            df_text %>% 
+            mutate(
+              text = sprintf(fmt, n, 100 * n / sum(n))
+            )
     } else {
+      if (show_percentage) {
+        fmt <- sprintf("%%.%df%%%%", digits)
+        df_text <- df_text %>% mutate(text = sprintf(fmt, 100 * n / sum(n)))
+      }
+      if (show_count) {
         if(comma_sep){
-            df_text <- df_text %>% mutate(text = sprintf("%s", scales::label_comma()(n)))
+          df_text <- df_text %>% mutate(text = sprintf("%s", scales::label_comma()(n)))
         }else
-            df_text <- df_text %>% mutate(text = sprintf("%d", n))
+          df_text <- df_text %>% mutate(text = sprintf("%d", n))
+      }
     }
   }
   list(shapes = df_shape, texts = df_text, labels = df_label, segs = df_seg)
