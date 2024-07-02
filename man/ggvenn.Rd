@@ -9,6 +9,7 @@ ggvenn(
   columns = NULL,
   show_elements = FALSE,
   show_percentage = TRUE,
+  show_count = TRUE,
   digits = 1,
   fill_color = c("blue", "yellow", "green", "red"),
   fill_alpha = 0.5,
@@ -23,7 +24,8 @@ ggvenn(
   label_sep = ",",
   count_column = NULL,
   show_outside = c("auto", "none", "always"),
-  auto_scale = FALSE
+  auto_scale = FALSE,
+  comma_sep = FALSE
 )
 }
 \arguments{
@@ -34,6 +36,8 @@ ggvenn(
 \item{show_elements}{Show set elements instead of count/percentage.}
 
 \item{show_percentage}{Show percentage for each set.}
+
+\item{show_count}{Show counts for each set.}
 
 \item{digits}{The desired number of digits after the decimal point}
 
@@ -64,6 +68,8 @@ ggvenn(
 \item{show_outside}{Show outside elements (not belongs to any set).}
 
 \item{auto_scale}{Allow automatically resizing circles according to element counts.}
+
+\item{comma_sep}{Whether to use comma as separator for displaying numbers.}
 }
 \value{
 The ggplot object to print or save to file.
